@@ -1,0 +1,19 @@
+# .gitignore
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Virtualenv
+.venv/
+env/
+
+# Environment files
+.env
+
+# Docker
+*.log
+*.pid
+
+# OS
+.DS_Store

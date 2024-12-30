@@ -1,0 +1,446 @@
+<!-- templates/report_template.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AWS Security & Compliance Inventory</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2 {
+      border-bottom: 1px solid #ccc;
+      margin-top: 40px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    th {
+      background-color: #f9f9f9;
+    }
+    .search-box {
+      margin: 15px 0;
+    }
+    .highlight {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>AWS Security & Compliance Inventory Report</h1>
+<p>Generated on <strong>{{ "{% now 'local' %}" }}</strong>
+   (or pass a custom timestamp from Python if you like)</p>
+
+<!-- Global Search -->
+<div class="search-box">
+  <label for="global-search"><strong>Global Search:</strong></label>
+  <input type="text" id="global-search" placeholder="Type to filter all tables...">
+</div>
+
+<!-- IAM Section -->
+<section>
+  <h2>IAM Overview</h2>
+  <p>Total IAM Users: {{ aws_data.iam.user_count }}</p>
+  <p>Users Without MFA:
+    {% if aws_data.iam.users_without_mfa %}
+      <span class="highlight">{{ aws_data.iam.users_without_mfa|length }}</span>
+      ({{ aws_data.iam.users_without_mfa }})
+    {% else %}
+      0
+    {% endif %}
+  </p>
+  <p>Total IAM Roles: {{ aws_data.iam.role_count }}</p>
+</section>
+
+<!-- S3 Section -->
+<section>
+  <h2>S3 Buckets</h2>
+  <p>Total Buckets: {{ aws_data.s3.bucket_count }}</p>
+  <p>Public Buckets:
+    {% if aws_data.s3.public_buckets %}
+      <span class="highlight">{{ aws_data.s3.public_buckets|length }}</span>
+      ({{ aws_data.s3.public_buckets }})
+    {% else %}
+      0
+    {% endif %}
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Bucket Name</th>
+        <th>Region</th>
+        <th>Created</th>
+        <th>HasPublicACL?</th>
+        <th>PublicAccessBlock</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in aws_data.s3.buckets %}
+      <tr>
+        <td>{{ b.Name }}</td>
+        <td>{{ b.Region }}</td>
+        <td>{{ b.CreationDate }}</td>
+        <td>
+          {% if b.HasPublicACL %}
+            <span class="highlight">YES</span>
+          {% else %}
+            NO
+          {% endif %}
+        </td>
+        <td>{{ b.PublicAccessBlock if b.PublicAccessBlock else "N/A" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<!-- Security Hub -->
+<section>
+  <h2>Security Hub (High Severity Findings)</h2>
+  <p>Total High Severity Findings: {{ aws_data.securityhub.high_severity_count }}</p>
+  {% if aws_data.securityhub.high_severity_count > 0 %}
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Severity</th>
+        <th>Description</th>
+        <th>Remediation</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in aws_data.securityhub.findings %}
+      <tr>
+        <td>{{ f.Title }}</td>
+        <td>{{ f.SeverityLabel }}</td>
+        <td>{{ f.Description }}</td>
+        <td>{{ f.Remediation }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+
+<!-- Cost / Analytics -->
+<section>
+  <h2>Cost & Usage (Placeholder)</h2>
+  <p>Estimated Monthly Cost (USD): {{ aws_data.cost.estimated_monthly_usd }}</p>
+  <p>{{ aws_data.cost.notes }}</p>
+</section>
+
+<!-- EC2 -->
+<section>
+  <h2>EC2 Instances</h2>
+  <p>Total Running Instances: {{ aws_data.ec2.total_running_instances }}</p>
+  {% for region, details in aws_data.ec2.region_details.items() %}
+    <h3>Region: {{ region }}</h3>
+    <p>Running Instances: {{ details.instance_count }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>InstanceId</th>
+          <th>State</th>
+          <th>InstanceType</th>
+          <th>LaunchTime</th>
+          <th>Tags</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for instance in details.instances %}
+        <tr>
+          <td>{{ instance.InstanceId }}</td>
+          <td>{{ instance.State }}</td>
+          <td>{{ instance.InstanceType }}</td>
+          <td>{{ instance.LaunchTime }}</td>
+          <td>
+            {% for tag in instance.Tags %}
+              {{ tag.Key }}={{ tag.Value }}<br>
+            {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+</section>
+
+<!-- ECS -->
+<section>
+  <h2>ECS Clusters</h2>
+  <p>Total Clusters: {{ aws_data.ecs.total_clusters }}</p>
+  <p>Total Running Tasks: {{ aws_data.ecs.total_running_tasks }}</p>
+  {% for region, details in aws_data.ecs.region_details.items() %}
+    <h3>Region: {{ region }}</h3>
+    <p>Cluster Count: {{ details.cluster_count }}, Running Tasks: {{ details.running_tasks }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>ClusterArn</th>
+          <th>ClusterName</th>
+          <th>Status</th>
+          <th>RunningTasks</th>
+          <th>ActiveServices</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in details.clusters %}
+        <tr>
+          <td>{{ c.ClusterArn }}</td>
+          <td>{{ c.ClusterName }}</td>
+          <td>{{ c.Status }}</td>
+          <td>{{ c.RunningTasks }}</td>
+          <td>{{ c.ActiveServices }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+</section>
+
+<!-- RDS -->
+<section>
+  <h2>RDS Databases</h2>
+  <p>Total DB Instances: {{ aws_data.rds.total_db_instances }}</p>
+  {% for region, details in aws_data.rds.region_details.items() %}
+    <h3>Region: {{ region }}</h3>
+    <p>DB Instance Count: {{ details.db_instance_count }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>DBInstanceIdentifier</th>
+          <th>Engine</th>
+          <th>Class</th>
+          <th>Status</th>
+          <th>AllocatedStorage</th>
+          <th>MultiAZ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for db in details.db_instances %}
+        <tr>
+          <td>{{ db.DBInstanceIdentifier }}</td>
+          <td>{{ db.Engine }}</td>
+          <td>{{ db.DBInstanceClass }}</td>
+          <td>{{ db.DBInstanceStatus }}</td>
+          <td>{{ db.AllocatedStorage }}</td>
+          <td>{{ db.MultiAZ }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+</section>
+
+<!-- DynamoDB -->
+<section>
+  <h2>DynamoDB Tables</h2>
+  <p>Total Tables: {{ aws_data.dynamodb.total_tables }}</p>
+  {% for region, details in aws_data.dynamodb.region_details.items() %}
+    <h3>Region: {{ region }}</h3>
+    <p>Table Count: {{ details.table_count }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>TableName</th>
+          <th>TableStatus</th>
+          <th>ItemCount</th>
+          <th>BillingMode</th>
+          <th>TableSizeBytes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in details.tables %}
+        <tr>
+          <td>{{ t.TableName }}</td>
+          <td>{{ t.TableStatus }}</td>
+          <td>{{ t.ItemCount }}</td>
+          <td>{{ t.BillingMode }}</td>
+          <td>{{ t.TableSizeBytes }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+</section>
+
+<!-- Lambda -->
+<section>
+  <h2>Lambda Functions</h2>
+  <p>Total Functions: {{ aws_data.lambda.total_functions }}</p>
+  {% for region, details in aws_data.lambda.region_details.items() %}
+    <h3>Region: {{ region }}</h3>
+    <p>Function Count: {{ details.function_count }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>FunctionName</th>
+          <th>Runtime</th>
+          <th>MemorySize</th>
+          <th>LastModified</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fn in details.functions %}
+        <tr>
+          <td>{{ fn.FunctionName }}</td>
+          <td>{{ fn.Runtime }}</td>
+          <td>{{ fn.MemorySize }}</td>
+          <td>{{ fn.LastModified }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+</section>
+
+<!-- EKS -->
+<section>
+  <h2>EKS Clusters</h2>
+  <p>Total Clusters: {{ aws_data.eks.total_clusters }}</p>
+  {% for region, details in aws_data.eks.region_details.items() %}
+    <h3>Region: {{ region }}</h3>
+    <p>Cluster Count: {{ details.cluster_count }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>ClusterName</th>
+          <th>Version</th>
+          <th>Status</th>
+          <th>Arn</th>
+          <th>CreatedAt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in details.clusters %}
+        <tr>
+          <td>{{ c.ClusterName }}</td>
+          <td>{{ c.Version }}</td>
+          <td>{{ c.Status }}</td>
+          <td>{{ c.Arn }}</td>
+          <td>{{ c.CreatedAt }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+</section>
+
+<!-- CloudFront -->
+<section>
+  <h2>CloudFront Distributions</h2>
+  <p>Total Distributions: {{ aws_data.cloudfront.distribution_count }}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>DomainName</th>
+        <th>Status</th>
+        <th>Origins</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dist in aws_data.cloudfront.distributions %}
+      <tr>
+        <td>{{ dist.Id }}</td>
+        <td>{{ dist.DomainName }}</td>
+        <td>{{ dist.Status }}</td>
+        <td>
+          {% for origin in dist.Origins %}
+            {{ origin }}<br>
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<!-- Load Balancers -->
+<section>
+  <h2>Load Balancers</h2>
+  <p>Total LBs: {{ aws_data.loadbalancers.total_load_balancers }}</p>
+  {% for region, details in aws_data.loadbalancers.region_details.items() %}
+    <h3>Region: {{ region }}</h3>
+    <p>Count: {{ details.count }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>LoadBalancerArn/Name</th>
+          <th>DNSName</th>
+          <th>Type</th>
+          <th>State</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lb in details.load_balancers %}
+        <tr>
+          <td>{{ lb.LoadBalancerArn if lb.LoadBalancerArn else lb.LoadBalancerName }}</td>
+          <td>{{ lb.DNSName }}</td>
+          <td>{{ lb.Type }}</td>
+          <td>{{ lb.State }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+</section>
+
+<!-- ASG -->
+<section>
+  <h2>Auto Scaling Groups</h2>
+  <p>Total ASGs: {{ aws_data.autoscaling.total_asgs }}</p>
+  {% for region, details in aws_data.autoscaling.region_details.items() %}
+    <h3>Region: {{ region }}</h3>
+    <p>ASG Count: {{ details.asg_count }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>DesiredCapacity</th>
+          <th>MinSize</th>
+          <th>MaxSize</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in details.asgs %}
+        <tr>
+          <td>{{ g.AutoScalingGroupName }}</td>
+          <td>{{ g.DesiredCapacity }}</td>
+          <td>{{ g.MinSize }}</td>
+          <td>{{ g.MaxSize }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+</section>
+
+<script>
+  // Single global search that filters all tables
+  const input = document.getElementById('global-search');
+  input.addEventListener('keyup', () => {
+    const filter = input.value.toLowerCase();
+    const allTables = document.querySelectorAll('table');
+    allTables.forEach(table => {
+      const rows = table.getElementsByTagName('tr');
+      for (let i = 1; i < rows.length; i++) {
+        const rowText = rows[i].textContent.toLowerCase();
+        rows[i].style.display = rowText.includes(filter) ? '' : 'none';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
