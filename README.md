@@ -1,4 +1,5 @@
 # JohnDCyber AWS Inventory Scanner
+<img width="733" alt="image" src="https://github.com/user-attachments/assets/05bd1a82-3e43-4ed0-bdcc-26ac7e458c8f" />
 
 JohnDCyber AWS Inventory Scanner is a free, open-source tool that collects a comprehensive inventory of AWS resources across multiple services—while highlighting potential security risks and compliance issues.
 
