@@ -1,67 +1,80 @@
-# John D Cyber's AWS Security & Compliance Inventory Scanner
+JohnDCyber AWS Inventory Scanner
 
-This tool gathers a **comprehensive** AWS inventory across multiple services (EC2, S3, ECS, RDS, DynamoDB, Lambda, EKS, CloudFront, ALB/NLB, Auto Scaling, IAM, and Security Hub findings), 
-then generates a **single HTML report** that includes:
-- **Security posture checks** (IAM best practices, S3 public buckets, missing MFA, etc.)
-- **Tag compliance** (highlight missing required tags)
-- **Cost/usage analytics** (optionally integrate AWS pricing or cost explorer)
-- **Robust search features** for easy filtering
+# JohnDCyber AWS Inventory Scanner
 
-## Quick Start
+JohnDCyber AWS Inventory Scanner is a free, open-source tool that collects a comprehensive inventory of AWS resources across multiple services—while highlighting potential security risks and compliance issues.
 
-1. **Install** dependencies:
+## WHY IT’S GREAT
+
+- **Single-pane-of-glass:** Combines EC2, S3, RDS, DynamoDB, ECS, Lambda, EKS, and more in one HTML report.
+- **Security & Compliance:** Flags public S3 buckets, IAM users without MFA, Security Hub high-severity findings, etc.
+- **Easy to Use:** Run a single Python script (or Docker container) to generate an HTML dashboard.
+- **Free & Extensible:** Open-source with the freedom to customize for new services, analytics, or cost data.
+
+## KEY FEATURES
+
+### Multi-Service Inventory
+- EC2, S3, ECS, RDS, DynamoDB, Lambda, EKS, CloudFront, Load Balancers, ASGs, etc.  
+- Clear separation in a single HTML report.
+
+### Security Focus
+- IAM checks for MFA and user details.  
+- S3 checks for public bucket ACLs.  
+- Security Hub high-severity findings.
+
+### Analytics & Cost
+- Placeholder cost estimates (can integrate AWS Cost Explorer).  
+- Summaries of resource counts, search filtering for easy usage checks.
+
+### HTML Report with Global Search
+- One HTML file with multiple tables.  
+- Filter all tables by typing into one search box.
+
+### Docker or Python
+- Optionally run via Docker, or install dependencies locally.
+
+## GETTING STARTED
+
+1. **Clone the repository**:
    ```bash
-   pip install -r requirements.txt
-
-Copy **.env.example** to **.env** and update AWS_PROFILE, AWS_REGIONS, etc.
-### Run:
-```bash
-python -m inventory.main
-````
-An HTML report (default: cloud_inventory_report.html) is generated in the project directory.
-Docker
-Build:
-bash
-Copy code
-docker build -t aws-inventory:latest .
-Run:
-```bash
-docker run --rm \
-  -e AWS_PROFILE=default \
-  -e AWS_REGIONS="us-east-1,us-west-2" \
-  -v ~/.aws:/home/appuser/.aws:ro \
-  -v $(pwd):/app/output \
-  aws-inventory:latest
- ````
-The final HTML report appears in your current directory as cloud_inventory_report.html.
-
-## Tests
-We use pytest and moto to mock AWS.
-Run tests:
-```bash
-pytest tests/
+   git clone https://github.com/johdcyber/JohnDCyber_AWS_inventory_Scanner.git
+   cd JohnDCyber_AWS_inventory_Scanner
+2. Run Locally (Python):
+```commandline
+  - pip install -r requirements.txt
+  - Copy .env.example to .env, update AWS_PROFILE, AWS_REGIONS, OUTPUT_FILE, etc.
+  - python -m inventory.main
+  - Opens cloud_inventory_report.html in your browser for a full summary.
 ```
-Extending
-Security Hub integration can be expanded to parse medium/low severity findings.
-IAM can be extended to check password policies, access key rotation, or wildcard policies.
-S3 can parse bucket policies in detail.
-Cost can integrate AWS Cost Explorer or the Pricing API for real cost analytics.
-Enjoy your AWS Security & Compliance inventory scanning!
+ 
+3. Run via Docker:
+```commandline
+  - docker build -t aws-inventory:latest .
+   - docker run --rm \
+       -e AWS_PROFILE=default \
+       -e AWS_REGIONS="us-east-1,us-west-2" \
+       -v ~/.aws:/home/appuser/.aws:ro \
+       -v $(pwd):/app/output \
+       aws-inventory:latest
+```
+### The HTML report appears in your current directory.
 
-python
-Copy code
+## USAGE & SECURITY
 
----
+- **AWS Credentials:** Uses local AWS credentials or IAM roles. Store them responsibly.  
+- **Visibility & Compliance:** Ideal for security engineers, compliance officers, IT/DevOps teams.  
+- **Extensible:** Add new gather functions for more AWS services, integrate deeper cost analytics, or schedule in CI/CD.
 
-## 7. `inventory/__init__.py`
+## CONTRIBUTING
 
-```python
-# inventory/__init__.py
+- Fork this repository, create a branch, add new features or improvements, then submit a Pull Request.  
+- Feedback, bug reports, and suggestions are welcome in GitHub Issues:  
+  [https://github.com/johdcyber/JohnDCyber_AWS_inventory_Scanner/issues](https://github.com/johdcyber/JohnDCyber_AWS_inventory_Scanner/issues)
 
-"""
-AWS Security & Compliance Inventory Scanner.
+## LICENSE
 
-Collects and reports on various AWS services, including IAM, S3, 
-SecurityHub, EC2, ECS, RDS, DynamoDB, Lambda, EKS, CloudFront, 
-Load Balancers, ASGs, and more.
-"""
+- Provided free for all to use, modify, and adapt. See `LICENSE` for details.
+
+## CONTACT
+- **Author**: [https://github.com/johdcyber](https://github.com/johdcyber)
+Enjoy the JohnDCyber AWS Inventory Scanner—an easy, free way to secure and manage your AWS environment!
